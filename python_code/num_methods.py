@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.linalg import inv
+from copy import copy
 
 
 class TeylorMethod():
@@ -30,9 +31,13 @@ class TeylorMethod():
             h /= 2
         return np.arange(a, b, h)
 
- class NeutonRafson():
-        def neuton_rafson(self,f, nabla, gesse, p_init, eps=0.00001):
+
+class NeutonRafson():
+        @staticmethod
+        def neuton_rafson(f, nabla, gesse, p_init=None, eps=0.00001):
             dim = len(gesse)
+            if p_init is None:
+                p_init = NeutonRafson._swenn(f, dim)
             grad = np.array([part(*p_init) for part in nabla])
             p = np.array(p_init)
             gesse_val = np.matrix([[gesse[i][j](*p) for j in range(dim)] for i in range(dim)])
@@ -42,6 +47,42 @@ class TeylorMethod():
                 grad = np.array([part(*p) for part in nabla])
                 gesse_val = np.matrix([[gesse[i][j](*p) for j in range(dim)] for i in range(dim)])
             return p
+
+        @staticmethod
+        def _swenn(f, dim):
+            p_init = np.random.random(size=dim)
+            volume = []
+            for coord in range(dim):
+                volume.append(NeutonRafson._swenn_line(f, p_init, coord))
+            return volume
+
+        @staticmethod
+        def _swenn_line(f, p_init, coord, h=0.001, max_iter=1000):
+            p0, p1 = copy(p_init), copy(p_init)
+            p1[coord] += h
+
+            if f(*p0) < f(*p1):
+                h *= -1
+                p0, p1 = p1, p0
+
+            p2 = copy(p1)
+            p2[coord] += h
+
+            iter_count = 0
+            while f(*p1) > f(*p2):
+                if iter_count > max_iter:
+                    raise ValueError("Swenn method exceed max_iteration number")
+
+                p_new = copy(p2)
+                p_new[coord] += h
+                p0, p1, p2 = p1, p2, p_new
+                h *= 2
+                iter_count += 1
+
+            return np.array([p0[coord], p2[coord]])
+
+
+
 
 
 if __name__ == '__main__':
@@ -55,8 +96,8 @@ if __name__ == '__main__':
     }
 
     teylor = TeylorMethod()
-    print(teylor.compute(f, a, b, y0, partials)
-    print(/////////////)
+    print(teylor.compute(f, a, b, y0, partials))
+    print('/////////////')
     f = lambda x, y: x ** 2 + y ** 2 + x ** 3
 
     nabla = np.array([lambda x, y: 2 * x + 3 * x ** 2,
@@ -67,4 +108,4 @@ if __name__ == '__main__':
 
     p_init = (0.3, 0.9)
     neuton = NeutonRafson()
-    print(neuton.neuton_rafson(f, nabla, gesse, p_init))
+    print(NeutonRafson.neuton_rafson(f, nabla, gesse))
