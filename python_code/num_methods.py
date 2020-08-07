@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.linalg import inv
 
 
 class TeylorMethod():
@@ -29,6 +30,19 @@ class TeylorMethod():
             h /= 2
         return np.arange(a, b, h)
 
+ class NeutonRafson():
+        def neuton_rafson(self,f, nabla, gesse, p_init, eps=0.00001):
+            dim = len(gesse)
+            grad = np.array([part(*p_init) for part in nabla])
+            p = np.array(p_init)
+            gesse_val = np.matrix([[gesse[i][j](*p) for j in range(dim)] for i in range(dim)])
+
+            while np.sqrt(sum(grad ** 2)) > eps:
+                p -= np.array(inv(gesse_val).dot(grad))[0]
+                grad = np.array([part(*p) for part in nabla])
+                gesse_val = np.matrix([[gesse[i][j](*p) for j in range(dim)] for i in range(dim)])
+            return p
+
 
 if __name__ == '__main__':
     f = lambda x, y: -x * y + np.sin(x)
@@ -41,4 +55,16 @@ if __name__ == '__main__':
     }
 
     teylor = TeylorMethod()
-    print(teylor.compute(f, a, b, y0, partials))
+    print(teylor.compute(f, a, b, y0, partials)
+    print(/////////////)
+    f = lambda x, y: x ** 2 + y ** 2 + x ** 3
+
+    nabla = np.array([lambda x, y: 2 * x + 3 * x ** 2,
+                      lambda x, y: 2 * y])
+
+    gesse = [[lambda x, y: 2 + 6 * x, lambda x, y: 0],
+             [lambda x, y: 0, lambda x, y: 2]]
+
+    p_init = (0.3, 0.9)
+    neuton = NeutonRafson()
+    print(neuton.neuton_rafson(f, nabla, gesse, p_init))
