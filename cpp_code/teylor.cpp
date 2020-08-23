@@ -1,15 +1,14 @@
 #include <iostream>
 #include "math.h"
-#include <unordered_map>
-#include <string>
 #include <functional>
 #include <vector>
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
+#include <fstream>
 
 
 class TeylorMethod {
 public:
-    TeylorMethod(int f_order): f_order(f_order) {};
+    explicit TeylorMethod(int f_order): f_order(f_order) {};
 
     std::vector<std::vector<float>> compute(
             std::function<float(std::vector<float>&)>& f,
@@ -17,13 +16,10 @@ public:
             float b,
             std::vector<float>& y0,
             std::vector<std::function<float(std::vector<float>&)>>& partials,
-            std::vector<float>& grid,
             int n_init=10,
-            double eps=0.01
+            double eps=0.0001
             ) {
-        if (grid.empty()) {
-            grid = _get_optimal_grid(f, a, b, y0, partials, n_init, eps);
-        }
+        std::vector<float> grid = _get_optimal_grid(f, a, b, y0, partials, n_init, eps);
         return _teylor_method(f, grid, y0, partials);
     }
 
@@ -38,7 +34,7 @@ private:
              std::vector<float>& y0,
              std::vector<std::function<float(std::vector<float>&)>>& partials,
              int n_init=10,
-             double eps=0.01) const {
+             double eps=0.01) {
         auto delta = FLT_MAX;
         double h = (b - a) / float(n_init);
         auto grid = _make_grid(a, b, h);
@@ -57,6 +53,7 @@ private:
                 }
             }
             h /= 2;
+            std::cout << delta << '\n';
         }
         return grid;
     }
@@ -67,77 +64,91 @@ private:
             std::vector<float>& y0,
             std::vector<std::function<float(std::vector<float>&)>>& partials
             ) const {
+        std::vector<float> prev_val;
+        std::vector<float> new_val;
+        new_val.push_back(grid[0]);
 
         std::vector<std::vector<float>> result(f_order + 1, std::vector<float>(grid.size()));
-        for (int j = 0; j < result.size(); ++j) {
+        for (int j = 0; j + 1 < result.size(); ++j) {
             result[j][0] = y0[j];
+            new_val.push_back(y0[j]);
         }
+        result.back()[0] = f(new_val);
+
 
         for (int i = 1; i < grid.size(); ++i) {
-            std::vector<float> prev_val;
+            prev_val.clear();
+            new_val.clear();
 
             prev_val.push_back(grid[i - 1]);
             for (int j = 0; j < result.size(); ++j) {
-                prev_val.push_back(result[i-1][j]);
-            }
-
-            result[result.size() - 1][i] = f(prev_val);
-            if (result.size() < 2) {
-                return result;
+                prev_val.push_back(result[j][i - 1]);
             }
 
             int der_ord = result.size() - 2;
             float step = grid[i] - grid[i - 1];
-            result[der_ord][i] = result[der_ord][i-1] + step * f(prev_val);
+            result[der_ord][i] = result[der_ord][i-1] + step * result.back()[i-1];
+
             for (int j = 0; j < result.size(); ++j) {
                 result[der_ord][i] += (step*step/2) * partials[j](prev_val) * (j == 0 ? 1 : result[j][i - 1]);
             }
 
+
             for (int j = 0; j + 2 < result.size(); ++j) {
-                result[j][i] = result[j][i-1] + step * result[j + 1][i - 1] + (step * step / 2) * result[j + 2][i - 1];
+                result[j][i] = result[j][i-1] + step * result[j + 1][i - 1];
             }
+
+            new_val.push_back(grid[i]);
+            for (int j = 0; j + 1 < result.size(); ++j) {
+                new_val.push_back(result[j][i]);
+            }
+            result[result.size() - 1][i] = f(new_val);
         }
 
-        return result;
+        std::vector<std::vector<float>> result_with_grid;
+        result_with_grid.push_back(grid);
+        for (auto& res: result) {
+            result_with_grid.push_back(res);
+        }
+        return result_with_grid;
     }
 
     std::vector<float> _make_grid(float a, float b, float h) const {
         std::vector<float> grid;
-        for (int i = 0; a + h*i < h; ++i) {
+        for (int i = 0; a + h*i < b; ++i) {
             grid.push_back(a + h*i);
         }
         return grid;
     }
-
-
 };
 
 
 
 
 float f(std::vector<float>& args) {
-    return args[1] - args[0]*std::exp(args[0]);
+    return -args[1] + args[0]*std::exp(-args[0]);
 }
 
 
 int main() {
     TeylorMethod teylor(2);
-    float a = 1, b = 10;
-    float y0 = 0.5;
+    std::function<float(std::vector<float>&)> func = f;
+    float a = 0, b = 2;
+    std::vector<float> y0 = {1, 0};
 
     std::vector<std::function<float(std::vector<float>&)>> partials = {
-            [](std::vector<float>& args)->float { return -args[0]*std::exp(args[0]) - std::exp(args[0]);},
-            [](std::vector<float>& args)->float { return -args[0]*std::exp(args[0]) - std::exp(args[0]);}
+            [](std::vector<float>& args)->float { return -args[0]*std::exp(-args[0]) + std::exp(-args[0]);},
+            [](std::vector<float>& args)->float { return -1;},
+            [](std::vector<float>& args)->float { return 0; }
     };
 
-    std::vector<std::vector<float>> result = teylor.compute(f, a, b, y0, partials);
+    std::vector<std::vector<float>> result = teylor.compute(func, a, b, y0, partials);
 
+    std::ofstream output("teylor_output.csv");
     for (int i = 0; i < result.size(); ++i) {
-        std::cout << i << " derivation: ";
         for (float val: result[i]) {
-            std::cout << val << " ";
+            output << val << ",";
         }
-        std::cout << "\n";
+        output << "\n";
     }
-
 }
