@@ -1,0 +1,3 @@
+C:/Users/Brux/Documents/GitHub/Labs_new/cpp_code/cmake-build-debug/CMakeFiles/teylor.dir
+C:/Users/Brux/Documents/GitHub/Labs_new/cpp_code/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Brux/Documents/GitHub/Labs_new/cpp_code/cmake-build-debug/CMakeFiles/rebuild_cache.dir

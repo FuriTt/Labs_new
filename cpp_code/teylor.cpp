@@ -17,7 +17,7 @@ public:
             std::vector<float>& y0,
             std::vector<std::function<float(std::vector<float>&)>>& partials,
             int n_init=10,
-            double eps=0.0001
+            double eps=0.01
             ) {
         std::vector<float> grid = _get_optimal_grid(f, a, b, y0, partials, n_init, eps);
         return _teylor_method(f, grid, y0, partials);
@@ -53,7 +53,6 @@ private:
                 }
             }
             h /= 2;
-            std::cout << delta << '\n';
         }
         return grid;
     }

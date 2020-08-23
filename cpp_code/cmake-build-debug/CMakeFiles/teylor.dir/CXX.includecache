@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Brux/Documents/GitHub/Labs_new/cpp_code/teylor.cpp
+iostream
+-
+math.h
+C:/Users/Brux/Documents/GitHub/Labs_new/cpp_code/math.h
+functional
+-
+vector
+-
+bits/stdc++.h
+-
+fstream
+-
+
