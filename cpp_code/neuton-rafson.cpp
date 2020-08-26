@@ -3,6 +3,7 @@
 #include "Eigen/Dense"
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 using namespace Eigen;
 
@@ -18,11 +19,11 @@ public:
             std::vector<std::function<float(VectorXd&)>>& nabla,
             std::vector<std::vector<std::function<float(VectorXd&)>>>& gesse,
             VectorXd& p_init,
-            float eps=0.001,
+            float eps=0.0001,
             float learning_rate=0.1) {
 
         VectorXd p(p_init);
-        float norm = MAXFLOAT;
+        float norm = std::pow(10, 9);
 
         while (norm > eps) {
             std::cout << "Norm: " << norm << "\n";
@@ -32,10 +33,12 @@ public:
             auto gesse_val = _materialize_matrix(gesse, p);
 
             VectorXd direction = -gesse_val.inverse() * grad;
-            std::cout << "Direction:" << direction << "\n";
+            std::cout << "Direction: " << direction << "\n";
+            std::cout << "Gradient: " << grad << "\n";
 
             auto step = _get_step(f, p, direction, learning_rate);
-            p += step * direction;
+            std::cout << "Step: " << step << "\n";
+            p += step * learning_rate * direction;
             norm = grad.norm();
         }
 
@@ -48,21 +51,32 @@ private:
             VectorXd& p,
             VectorXd& direction,
             float learning_rate) {
-        return 1;
-        /*
+
         std::function<float(float)> func = [&](float s)->float {
             VectorXd new_point = p + s * learning_rate * direction;
             return f(new_point);
         };
+
+        /*
+        float step = 0.01;
+        float min_val = func(step);
+        for (int i = 1; i < 30; ++i) {
+            if (func(i*0.01) < min_val) {
+                min_val = func(i*0.01);
+                step = i*0.01;
+            }
+        }
+        std::cout << "Step " << step << "\n";
+        return step;
+        */
         auto unimodal_interval = _get_unimodal_interval(func, learning_rate);
-        return _get_min_uniform(func, unimodal_interval, learning_rate / 100) / learning_rate;
-         */
+        return _get_min_uniform(func, unimodal_interval, learning_rate) / learning_rate;
     }
 
     static std::pair<float, float> _get_unimodal_interval(
             std::function<float(float)>& f,
             float lrate,
-            float thr = 1000) {
+            float thr = 100) {
         float start = -lrate;
         float step = 1;
         if (f(start) < f(0)) {
@@ -70,24 +84,24 @@ private:
             step *= -1;
         }
         float p_next = step * lrate;
-        while ((f(p_next) < f(0)) & (std::abs(p_next) < thr) ) {
-            step *= 2;
+        while ((f(p_next) < f(0)) & (step < thr) ) {
+            step += 1;
             p_next = step * lrate;
         }
 
-        std::cout << "Интервал: " << start << " " << p_next << "\n";
+        std::cout << "Interval: " << start << " " << p_next << "\n";
 
         if (start < p_next) {
-            return {start, p_next};
+            return {lrate, p_next};
         }
-        return {p_next, start};
+        return {lrate, start};
     }
 
     static float _get_min_uniform(
             std::function<float(float)>& f,
             std::pair<float, float>& interval,
             float lrate) {
-        float min_val = MAXFLOAT;
+        float min_val = std::pow(10, 9);;
         float point;
         for (int i = 0; interval.first + i * lrate <= interval.second; ++i) {
             float new_point = interval.first + i * lrate;
@@ -161,11 +175,11 @@ int main() {
     };
 
     VectorXd p_init(2);
-    p_init << 8, -7;
+    p_init << 8, 8;
     std::function<float(VectorXd&)> func(f);
 
     auto neuton_rafgon = NeutonRafson();
-    neuton_rafgon.compute(func, nabla, gesse, p_init);
+    neuton_rafgon.compute(func, nabla, gesse, p_init, 0.01, 0.01);
 
     std::ofstream output("neuton_rafson.csv");
     for (auto& p: neuton_rafgon.trajectory) {
