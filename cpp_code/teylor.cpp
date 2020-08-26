@@ -68,13 +68,14 @@ private:
         new_val.push_back(grid[0]);
 
         std::vector<std::vector<float>> result(f_order + 1, std::vector<float>(grid.size()));
+        // Push initial values
         for (int j = 0; j + 1 < result.size(); ++j) {
             result[j][0] = y0[j];
             new_val.push_back(y0[j]);
         }
         result.back()[0] = f(new_val);
 
-
+        // Iterate through grid
         for (int i = 1; i < grid.size(); ++i) {
             prev_val.clear();
             new_val.clear();
@@ -84,6 +85,7 @@ private:
                 prev_val.push_back(result[j][i - 1]);
             }
 
+            // case (n-1)-derivation
             int der_ord = result.size() - 2;
             float step = grid[i] - grid[i - 1];
             result[der_ord][i] = result[der_ord][i-1] + step * result.back()[i-1];
@@ -92,9 +94,9 @@ private:
                 result[der_ord][i] += (step*step/2) * partials[j](prev_val) * (j == 0 ? 1 : result[j][i - 1]);
             }
 
-
+            // MAIN TEYLOR FORMULA
             for (int j = 0; j + 2 < result.size(); ++j) {
-                result[j][i] = result[j][i-1] + step * result[j + 1][i - 1];
+                result[j][i] = result[j][i-1] + step * result[j + 1][i - 1] + (step*step/2)*result[j + 2][i - 1];
             }
 
             new_val.push_back(grid[i]);
@@ -133,12 +135,12 @@ int main() {
     TeylorMethod teylor(2);
     std::function<float(std::vector<float>&)> func = f;
     float a = 0, b = 2;
-    std::vector<float> y0 = {1, 0};
+    std::vector<float> y0 = {1, 0, 1};
 
     std::vector<std::function<float(std::vector<float>&)>> partials = {
             [](std::vector<float>& args)->float { return -args[0]*std::exp(-args[0]) + std::exp(-args[0]);},
             [](std::vector<float>& args)->float { return -1;},
-            [](std::vector<float>& args)->float { return 0; }
+            [](std::vector<float>& args)->float { return 0; },
     };
 
     std::vector<std::vector<float>> result = teylor.compute(func, a, b, y0, partials);
