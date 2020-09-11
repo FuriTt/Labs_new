@@ -179,7 +179,7 @@ int main() {
     std::function<float(VectorXd&)> func(f);
 
     auto neuton_rafgon = NeutonRafson();
-    neuton_rafgon.compute(func, nabla, gesse, p_init, 0.001, 0.001);
+    neuton_rafgon.compute(func, nabla, gesse, p_init, 0.001, 0.01);
 
     std::ofstream output("neuton_rafson.csv");
     for (auto& p: neuton_rafgon.trajectory) {
