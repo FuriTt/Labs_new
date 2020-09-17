@@ -1,0 +1,4 @@
+C:/Users/Brux/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/1.dir
+C:/Users/Brux/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Brux/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/2.dir
+C:/Users/Brux/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/edit_cache.dir
