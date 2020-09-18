@@ -142,10 +142,15 @@ std::vector<std::vector<float>> interpolate_poly(std::vector<std::vector<float>>
 int main() {
     vector<vector<float>> data = parse2DCsvFile("1.csv");
 
+    string text = "Please input month (1 to 12) and polynom degree\n"
+                  "Example: 2 3";
+    int month, deg;
+    cin >> month >> deg;
+
     ofstream learn_data("learn_data2.csv");
     ofstream predict_data("predict_data2.csv");
 
-    auto result = interpolate_poly(data, 1, 3);
+    auto result = interpolate_poly(data, month, deg);
 
     auto x = result[0];
     auto y = result[2];

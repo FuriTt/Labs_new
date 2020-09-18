@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
 
@@ -143,6 +144,11 @@ int main()
 {
     vector<vector<float>> data = parse2DCsvFile("1.csv");
 
+    string text = "Please input year, month (from 1 to 12), method (lagrange, neuton_for, neuton_back, period (e.g. 12))\n"
+                  "Example: 1880 2 lagrange 12";
+
+    cout << text << endl;
+
     ofstream learn_data("learn_data.csv");
     ofstream predict_data("predict_data.csv");
 
@@ -150,7 +156,21 @@ int main()
     auto neuton_fow = std::function<float(std::vector<float>&, std::vector<float>&, float)>(make_neuton_polynom_forward);
     auto neuton_back = std::function<float(std::vector<float>&, std::vector<float>&, float)>(make_neuton_polynom_backward);
 
-    auto result = interpolate_weather(data, 1880, 1, neuton_back, 12);
+
+    int year, month, period;
+    string method;
+
+    cin >> year >> month >> method >> period;
+
+    std::vector<std::vector<float>> result;
+
+    if (method == "lagrange") {
+        result = interpolate_weather(data, year, month, lagrange, period);
+    } else if (method == "neuton_for") {
+        result = interpolate_weather(data, year, month, neuton_fow, period);
+    } else if (method == "neuton_back") {
+        result = interpolate_weather(data, year, month, neuton_back, period);
+    }
 
     auto x = result[2];
     auto y = result[3];

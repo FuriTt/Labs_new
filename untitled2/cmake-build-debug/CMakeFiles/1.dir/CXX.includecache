@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Brux/Documents/GitHub/Labs_new/untitled2/main.cpp
+vector
+-
+fstream
+-
+functional
+-
+iostream
+-
+sstream
+-
+string
+-
+unordered_map
+-
+
